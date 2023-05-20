@@ -2,12 +2,16 @@ package main
 
 import (
 	"database/sql"
+	"encoding/gob"
 	"errors"
 	"fmt"
+	"github.com/kennnyz/concurrencyGO/final-project/data"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/alexedwards/scs/redisstore"
@@ -21,42 +25,44 @@ import (
 const webPort = "80"
 
 func main() {
-	// connect to DB
+	// connect to the database
 	db, err := initDB()
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
-	db.Ping()
 
-	// create seasions
+	// create sessions
 	session := initSession()
 
 	// create loggers
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	errLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	// create channels
 
-	// create chanels
-
-	// create waitGroups
+	// create wait-group
 	wg := sync.WaitGroup{}
 
-	// set Up app config
-
+	// set up the application config
 	app := Config{
 		Session:  session,
 		DB:       db,
-		Wait:     &wg,
 		InfoLog:  infoLog,
-		ErrorLog: errLog,
+		ErrorLog: errorLog,
+		Wait:     &wg,
+		Models:   data.New(db),
 	}
 
 	// set up mail
 
+	// listen for signals
+	go app.listenForShutDown()
+
 	// listen for web connections
 	err = app.serve()
 	if err != nil {
-		log.Println(err)
+		app.ErrorLog.Println(err)
+		return
 	}
 }
 
@@ -122,6 +128,8 @@ func openDB(dsn string) (*sql.DB, error) {
 }
 
 func initSession() *scs.SessionManager {
+	gob.Register(data.User{})
+
 	// set up session
 	session := scs.New()
 	session.Store = redisstore.New(initRedis())
@@ -133,12 +141,31 @@ func initSession() *scs.SessionManager {
 	return session
 }
 
+// initRedis returns a pool of connections to Redis
 func initRedis() *redis.Pool {
 	redisPool := &redis.Pool{
 		MaxIdle: 10,
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", os.Getenv("REDIS"))
+			return redis.Dial("tcp", "127.0.0.1:6379")
 		},
 	}
+
 	return redisPool
+}
+
+func (app *Config) listenForShutDown() {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	app.shutDown()
+	os.Exit(0)
+}
+
+func (app *Config) shutDown() {
+	// perform any cleanup tasks
+	app.InfoLog.Println("Would run cleanup tasks... ")
+
+	//block until WaitGroup is empty
+	app.Wait.Wait()
+	app.InfoLog.Println("Closing channels and shutting down  application...")
 }
