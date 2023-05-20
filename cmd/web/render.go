@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var pathTotemplates = "./cmd/web/templates"
+var pathtemplates = "./cmd/web/templates"
 
 type TemplateData struct {
 	StringMap     map[string]string
@@ -24,15 +24,15 @@ type TemplateData struct {
 
 func (app *Config) render(w http.ResponseWriter, r *http.Request, t string, templateData *TemplateData) {
 	partials := []string{
-		fmt.Sprintf("%s/base.layout.gohtml", pathTotemplates),
-		fmt.Sprintf("%s/header.partial.gohtml", pathTotemplates),
-		fmt.Sprintf("%s/navbar.partial.gohtml", pathTotemplates),
-		fmt.Sprintf("%s/footer.partial.gohtml", pathTotemplates),
-		fmt.Sprintf("%s/alerts.partial.gohtml", pathTotemplates),
+		fmt.Sprintf("%s/base.layout.gohtml", pathtemplates),
+		fmt.Sprintf("%s/header.partial.gohtml", pathtemplates),
+		fmt.Sprintf("%s/navbar.partial.gohtml", pathtemplates),
+		fmt.Sprintf("%s/footer.partial.gohtml", pathtemplates),
+		fmt.Sprintf("%s/alerts.partial.gohtml", pathtemplates),
 	}
 
 	var templateSlice []string
-	templateSlice = append(templateSlice, fmt.Sprintf("%s/%s", pathTotemplates, t))
+	templateSlice = append(templateSlice, fmt.Sprintf("%s/%s", pathtemplates, t))
 
 	for _, x := range partials {
 		templateSlice = append(templateSlice, x)
