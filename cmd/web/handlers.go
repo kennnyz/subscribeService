@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 )
 
@@ -42,8 +41,15 @@ func (app *Config) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("password is currently", password)
 	if !validPassword {
+		msg := Message{
+			To:      email,
+			Subject: "Failed log in attempt",
+			Data:    "Invalid login attempt!",
+		}
+
+		app.sendEmail(msg)
+
 		app.Session.Put(r.Context(), "error", "invalid credentials.")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
