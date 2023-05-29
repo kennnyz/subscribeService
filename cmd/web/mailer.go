@@ -3,11 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/vanng822/go-premailer/premailer"
-	mail "github.com/xhit/go-simple-mail/v2"
 	"html/template"
 	"sync"
 	"time"
+
+	"github.com/vanng822/go-premailer/premailer"
+	mail "github.com/xhit/go-simple-mail/v2"
 )
 
 type Mail struct {
