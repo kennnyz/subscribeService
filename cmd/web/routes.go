@@ -24,7 +24,7 @@ func (app *Config) routes() http.Handler {
 	mux.Get("/register", app.RegisterPage)
 	mux.Post("/register", app.PostRegisterPage)
 
-	mux.Mount("members", app.authRouter())
+	mux.Mount("/members", app.authRouter())
 	return mux
 }
 
