@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/gob"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -22,8 +21,6 @@ import (
 	_ "github.com/jackc/pgx/v4"
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
-
-const webPort = "80"
 
 func main() {
 	// connect to the database
@@ -88,13 +85,13 @@ func (app *Config) listenForErrors() {
 func (app *Config) serve() error {
 	// start http server
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", webPort),
+		Addr:    "localhost:8080",
 		Handler: app.routes(),
 	}
 	app.InfoLog.Println("Starting web server...")
 	err := srv.ListenAndServe()
 	if err != nil {
-		app.ErrorLog.Println("Error starting web server!")
+		app.ErrorLog.Println("Error starting web server! ", err)
 		return err
 	}
 	return nil

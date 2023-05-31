@@ -1,34 +1,38 @@
-DSN=host=localhost port=5432 user=postgres password=password dbname=concurrency sslmode=disable timezone=UTC connect_timeout=5
-BINARY_NAME=myapp.exe
-REDIS=127.0.0.1:6379
+BINARY_NAME=myapp
+DSN="host=localhost port=5432 user=postgres password=password dbname=concurrency sslmode=disable timezone=UTC connect_timeout=5"
+REDIS="127.0.0.1:6379"
 
-## build: builds all binaries
+## build: Build binary
 build:
-	@go build -o ${BINARY_NAME} ./cmd/web
-	@echo back end built!
+	@echo "Building..."
+	env CGO_ENABLED=0  go build -ldflags="-s -w" -o ${BINARY_NAME} ./cmd/web
+	@echo "Built!"
 
+## run: builds and runs the application
 run: build
-	@echo Starting...
-	set "DSN=${DSN}"
-	set "REDIS=${REDIS}"
-	start /min cmd /c ${BINARY_NAME} &
-	@echo back end started!
+	@echo "Starting..."
+	@env DSN=${DSN} REDIS=${REDIS} ./${BINARY_NAME} &
+	@echo "Started!"
 
+## clean: runs go clean and deletes binaries
 clean:
-	@echo Cleaning...
-	@DEL ${BINARY_NAME}
+	@echo "Cleaning..."
 	@go clean
-	@echo Cleaned!
+	@rm ${BINARY_NAME}
+	@echo "Cleaned!"
 
+## start: an alias to run
 start: run
 
+## stop: stops the running application
 stop:
 	@echo "Stopping..."
-	@taskkill /IM ${BINARY_NAME} /F
-	@echo Stopped back end
+	@-pkill -SIGTERM -f "./${BINARY_NAME}"
+	@echo "Stopped!"
 
+## restart: stops and starts the application
 restart: stop start
 
+## test: runs all tests
 test:
-	@echo "Testing..."
 	go test -v ./...

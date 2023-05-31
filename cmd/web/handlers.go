@@ -105,11 +105,12 @@ func (app *Config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 	_, err = u.Insert(u)
 	if err != nil {
 		app.Session.Put(r.Context(), "error", "Unable to create user")
+		app.ErrorLog.Println(err)
 		http.Redirect(w, r, "/register", http.StatusSeeOther)
 	}
 
 	// send an activation email
-	url := fmt.Sprintf("http://localhost/activate?email=%s", u.Email)
+	url := fmt.Sprintf("http://localhost:8080/activate?email=%s", u.Email)
 
 	app.InfoLog.Println(url)
 
@@ -129,9 +130,10 @@ func (app *Config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 func (app *Config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 	// validate url
 	url := r.RequestURI
-	app.InfoLog.Println(url)
-	testUrl := fmt.Sprintf("http://localhost%s", url)
-	if !VerifyToken(testUrl) { // TODO CHANGE
+	testURL := fmt.Sprintf("http://localhost:8080%s", url)
+	okay := VerifyToken(testURL)
+
+	if !okay {
 		app.Session.Put(r.Context(), "error", "Invalid token.")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
@@ -144,6 +146,7 @@ func (app *Config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
+
 	u.Active = 1
 	err = u.Update()
 	if err != nil {
@@ -152,7 +155,7 @@ func (app *Config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.Session.Put(r.Context(), "flash", "Account activated. You can log in.")
+	app.Session.Put(r.Context(), "flash", "Account activated. You can now log in.")
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 

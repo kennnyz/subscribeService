@@ -23,7 +23,6 @@ func GenerateTokenFromString(data string) string {
 // VerifyToken verifies a signed token
 func VerifyToken(token string) bool {
 	return true
-
 }
 
 // Expired checks to see if a token has expired
